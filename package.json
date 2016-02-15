@@ -1,0 +1,15 @@
+{
+  "name": "data-fetcher",
+  "version": "1.0.0",
+  "description": "Simple tool to fetch, process, test and deploy datasets",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jasper Nalbach",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "node-schedule": "^0.6.0",
+    "request": "^2.67.0"
+  }
+}
