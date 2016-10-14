@@ -18,7 +18,8 @@ var config = {
       schedule: {
         hour: 5
       },
-      rescheduleOnFailAfterMinutes: 15
+      rescheduleOnFailAfterMinutes: 15,
+      retryCount: 10
     }
   }
 }
@@ -45,7 +46,10 @@ for (var key in config.fetcher) {
   }
 }
 
-function run (plugin) {
+function run (plugin, counter) {
+  // set retry counter
+  counter = counter || config.retryCount
+
   console.log('[' + plugin + ']', 'Run')
   // settings
   var settings = config.fetcher[plugin].settings
@@ -53,22 +57,22 @@ function run (plugin) {
   console.log('[' + plugin + ']', 'Fetch...')
   plugins[plugin].fetch(settings, function (err, data) {
     if (err) {
-      handleError(plugin, 'Fetch failed', err)
+      handleError(plugin, 'Fetch failed', err, counter)
     } else {
       console.log('[' + plugin + ']', 'Process...')
       plugins[plugin].process(settings, data, function (err, data) {
         if (err) {
-          handleError(plugin, 'Process failed', err)
+          handleError(plugin, 'Process failed', err, counter)
         } else {
           console.log('[' + plugin + ']', 'Test...')
           plugins[plugin].test(settings, data, function (err, data) {
             if (err) {
-              handleError(plugin, 'Test failed', err)
+              handleError(plugin, 'Test failed', err, counter)
             } else {
               console.log('[' + plugin + ']', 'Deploy...')
               plugins[plugin].deploy(settings, data, function (err) {
                 if (err) {
-                  handleError(plugin, 'Deploy failed', err)
+                  handleError(plugin, 'Deploy failed', err, counter)
                 } else {
                   console.log('[' + plugin + ']', 'Finished')
                 }
@@ -85,19 +89,16 @@ function run (plugin) {
 var transporter = nodemailer.createTransport(sendmailTransport({}))
 
 // error handler
-function handleError (plugin, text, err) {
+function handleError (plugin, text, err, counter) {
   console.error('[' + plugin + ']', 'Error: ' + text + ': ', err)
 
   // retry later
-  if (config.rescheduleOnFailAfterMinutes > 0 && !runOnce) {
+  if (config.rescheduleOnFailAfterMinutes > 0 && !runOnce && counter > 0) {
     var date = new Date(Date.now() + config.rescheduleOnFailAfterMinutes * 60000)
     schedule.scheduleJob(date, function () {
-      run(plugin)
+      run(plugin, counter - 1)
     })
-  }
-
-  // send mail
-  if (config.mail !== '') {
+  } else if (config.mail !== '') { // send mail
     var mailData = {
       from: config.mail,
       to: config.mail,
