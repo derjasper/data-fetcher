@@ -2,31 +2,16 @@ var schedule = require('node-schedule')
 var nodemailer = require('nodemailer')
 var sendmailTransport = require('nodemailer-sendmail-transport')
 
-var plugins = {
-  'fuelSpain': require('./fetcher/fuel-spain.js')
-}
+var config = require('./config.json')
 
-var config = {
-  'mail': '',
-  'fetcher': {
-    'fuelSpain': {
-      settings: {
-        targetFile: '../simple-geojson-server/data/fuelSpain.geojson',
-        serverSocket: '/tmp/simple-geojson-server.sock',
-        serverService: 'fuelSpain'
-      },
-      schedule: {
-        hour: 5
-      },
-      rescheduleOnFailAfterMinutes: 15,
-      retryCount: 10
-    }
-  }
-}
+// TODO unify fetch and process step
+// TODO move deploy step out of fetcher
 
-// TODO settings manager
-// TODO plugin manager
-// TODO move deploy-step out of fetcher
+// load plugins
+var plugins = {}
+for (fetcher in config.fetcher) {
+  plugins[fetcher] = require(config.fetcher[fetcher].module)
+}
 
 // process args
 var runOnce = false

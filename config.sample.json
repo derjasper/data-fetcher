@@ -1,0 +1,31 @@
+{
+  "mail": "",
+  "fetcher": {
+    "fuelSpain": {
+      "module": "./fetcher/fuel-spain.js",
+      "settings": {
+        "targetFile": "../simple-geojson-server/data/fuelSpain.geojson",
+        "serverSocket": "/tmp/simple-geojson-server.sock",
+        "serverService": "fuelSpain"
+      },
+      "schedule": {
+        "hour": 5
+      },
+      "rescheduleOnFailAfterMinutes": 15,
+      "retryCount": 10
+    },
+    "fuelFrance": {
+      "module": "./fetcher/fuel-france.js",
+      "settings": {
+        "targetFile": "../simple-geojson-server/data/fuelFrance.geojson",
+        "serverSocket": "/tmp/simple-geojson-server.sock",
+        "serverService": "fuelFrance"
+      },
+      "schedule": {
+        "minute": 1
+      },
+      "rescheduleOnFailAfterMinutes": 15,
+      "retryCount": 5
+    }
+  }
+}

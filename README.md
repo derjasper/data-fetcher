@@ -2,4 +2,6 @@
 
 This is aimed to become a simple framework for fetching, processing and deploying data from the web.
 
-Currently, it is only able to fetch fuel data from http://geoportalgasolineras.es/ and deploys it using [simple-geojson-server](https://github.com/derjasper/simple-geojson-server).
+Current functionality:
+* fuel data from http://geoportalgasolineras.es/, deployed using [simple-geojson-server](https://github.com/derjasper/simple-geojson-server)
+* fuel data from https://www.prix-carburants.gouv.fr/, deployed using [simple-geojson-server](https://github.com/derjasper/simple-geojson-server)

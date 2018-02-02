@@ -9,9 +9,12 @@
   "author": "Jasper Nalbach",
   "license": "GPL-3.0",
   "dependencies": {
+    "iconv-lite": "^0.4.19",
     "node-schedule": "^0.6.0",
     "nodemailer": "^2.5.0",
     "nodemailer-sendmail-transport": "^1.0.0",
-    "request": "^2.67.0"
+    "request": "^2.67.0",
+    "unzip": "^0.1.11",
+    "xml2js": "^0.4.19"
   }
 }
