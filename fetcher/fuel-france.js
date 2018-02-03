@@ -4,54 +4,66 @@ var fs = require('fs')
 var unzip = require('unzip')
 var xml2js = require('xml2js')
 var iconv = require('iconv-lite')
+var str = require('string-to-stream')
+var exec = require('child_process').exec
+var fs = require('fs')
 
 // Fetches data from https://www.prix-carburants.gouv.fr/, stores it as .geojson file and deploys it to simple-geojson-server
 
 function fetchData (settings, callback) {
-  var err = false
-
-  try {
-    var r = request
-      .get({
-        url: 'https://donnees.roulez-eco.fr/opendata/instantane',
-        encoding: null
-      })
-      .on('error', function(error) {
-        // do nothing, ignore faulty response header errors
-      })
-      .on('response', function(resp) {
-        if(resp.statusCode === 200) {
-           r.pipe(unzip.Parse())
-             .on('error', function(error) {
-               err = true
-               callback(error, null)
-             })
-             .on('entry', function (entry) {
-               if (entry.type == "File" && entry.path === "PrixCarburants_instantane.xml") {
-                 const chunks = []
-                 entry.on('data', function(data) {
-                   chunks.push(data);
-                 }).on('end', function () {
-                   if (!err) {
-                     data = Buffer.concat(chunks)
-                     data = iconv.decode(data, 'iso-8859-1');
-                     callback(null, data)
-                   }
-                 })
-               } else {
-                 entry.autodrain();
-               }
-             })
-
-           r.resume()
-        } else {
-          callback(new Error('Status Code: ' + resp.statusCode), null)
-        }
-      })
-    } catch(error) {
+  function dealWithIt(stream) {
+    var err = false
+    stream.pipe(unzip.Parse())
+    .on('error', function(error) {
       err = true
       callback(error, null)
-    }
+    })
+    .on('entry', function (entry) {
+      if (entry.type == "File" && entry.path === "PrixCarburants_instantane.xml") {
+        const chunks = []
+        entry.on('data', function(data) {
+          chunks.push(data);
+        }).on('end', function () {
+          if (!err) {
+            data = Buffer.concat(chunks)
+            data = iconv.decode(data, 'iso-8859-1');
+            callback(null, data)
+          }
+        })
+      } else {
+        entry.autodrain();
+      }
+    })
+  }
+
+  // node is a piece of shit so I need this brainfuck
+  exec('curl -L https://donnees.roulez-eco.fr/opendata/instantane > tmp.zip',{ maxBuffer: 10000000},
+    function (error, stdout, stderr) {
+      if (error) {
+        callback(error, null)
+      } else {
+        dealWithIt(fs.createReadStream('tmp.zip'))
+      }
+  });
+
+/*
+  request.get(
+    {
+      url: 'https://donnees.roulez-eco.fr/opendata/instantane',
+      headers: {
+        'Accept': 'application/zip'
+      }
+    },
+    function (error, response, body) {
+      if (error) {
+        callback(error, null)
+      } else if (response.statusCode !== 200) {
+        callback(new Error('Status Code: ' + response.statusCode), null)
+      } else {
+        dealWithIt(str(body))
+      }
+    })
+    */
 }
 
 function processData (settings, rawData, callback) {
